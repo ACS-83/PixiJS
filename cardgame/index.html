@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Card game</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.10/pixi.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+</head>
+<body>
+  <script type="text/javascript">
+//clear console
+console.clear();
+
+// Load sounds data
+var sound = new Howl({
+  src: ['sfx/sounds.mp3'],
+  sprite: {
+    ding: [0, 1801],
+    discard: [1802, 533],
+    shuffle: [2332, 1368],
+    wrong: [3724, 430]
+  }
+});
+
+// Start
+sound.play('shuffle');
+
+const app = new PIXI.Application();
+document.body.appendChild(app.view);
+
+// Create render texture
+let renderTexture = PIXI.RenderTexture.create(
+    app.screen.width,
+    app.screen.height,
+);
+
+const backTexture = PIXI.Texture.from('gfx/00.png');
+const currentTexture = renderTexture;
+
+// Create a new sprite that uses the render texture we created above
+const outputSprite = new PIXI.Sprite(currentTexture);
+
+// Align
+outputSprite.x = 400;
+outputSprite.y = 300;
+outputSprite.anchor.set(0.5);
+
+// Add to stage
+app.stage.addChild(outputSprite);
+
+const stuffContainer = new PIXI.Container();
+
+stuffContainer.x = 100;
+stuffContainer.y = 100;
+
+app.stage.addChild(stuffContainer);
+
+// create an array of image ids..
+const imageIds = [
+    'gfx/01.png',
+    'gfx/02.png',
+    'gfx/03.png',
+    'gfx/04.png',
+    'gfx/05.png',
+    'gfx/06.png',
+    'gfx/07.png',
+    'gfx/08.png',
+    'gfx/09.png',
+    'gfx/10.png',
+];
+
+// Randomize cards order
+imageIds.sort( () => Math.random() - 0.5 * Math.random())
+// Create an array of items
+const items = [];
+
+// Create items
+for (let i = 0; i < 10; i++) {
+    const item = PIXI.Sprite.from(imageIds[i % imageIds.length]);
+    const itemB = PIXI.Sprite.from(backTexture);
+    itemB.interactive = true;
+    itemB.buttonMode = true;
+    itemB.on('pointerdown', show)
+    itemB.x = (i % 5) * 140;
+    itemB.y = Math.floor(i / 5) * 170;
+    itemB.anchor.set(.5, .5);
+    stuffContainer.addChild(itemB);
+    items.push(item);
+}
+
+
+// Variables
+let counter = 5;
+let total = 0;
+
+// Show card
+function show(e) {
+  sound.play('discard');
+  counter--;
+  this.interactive = false;
+  this.texture = PIXI.Texture.from(imageIds.shift());
+  valor = this._texture.textureCacheIds.toString();
+  total += parseInt(valor.slice(4, 6));
+  scoreNumber.text = "Score: " + total;
+  if (counter === 0) {
+    stuffContainer.interactiveChildren = false;
+    results();
+  }
+}
+
+// Text style
+const style = new PIXI.TextStyle({
+    fontFamily: 'Arial',
+    fontSize: 36,
+    fontStyle: 'italic',
+    fontWeight: 'bold',
+    fill: ['#ffffff', '#00ff99'], // gradient
+    stroke: '#4a1850',
+    strokeThickness: 5,
+    dropShadow: true,
+    dropShadowColor: '#000000',
+    dropShadowBlur: 4,
+    dropShadowAngle: Math.PI / 6,
+    dropShadowDistance: 6,
+    wordWrap: true,
+    wordWrapWidth: 440,
+    lineJoin: 'round',
+});
+
+// Score
+const scoreNumber = new PIXI.Text('Score: ' + total, style);
+scoreNumber.x = 50;
+scoreNumber.y = 380;
+app.stage.addChild(scoreNumber);
+
+function results() {
+  //Shuffle button
+  const richText = new PIXI.Text('Shuffle', style);
+  richText.interactive = true
+  richText.buttonMode = true
+  richText.on('pointerdown', restart)
+  richText.x = 575;
+  richText.y = 380;
+
+  //Rectangle for shuffle button
+  const graphics = new PIXI.Graphics();
+  graphics.lineStyle(2, 0xffff33, 1);
+  graphics.beginFill(0xffff66, 1);
+  graphics.drawRoundedRect(570, 380, 140, 45, 16);
+  graphics.endFill();
+  
+  //Win or lose text
+  const winOrLose = new PIXI.Text('', style);
+  winOrLose.x = 285;
+  winOrLose.y = 380;
+  if (total >= 25) {
+    winOrLose.text = "YOU WIN!"
+    sound.play('ding');
+  } else {
+    winOrLose.text = "YOU LOSE!"
+    sound.play('wrong');
+  }
+  app.stage.addChild(winOrLose);
+  app.stage.addChild(graphics);
+  app.stage.addChild(richText);
+}
+
+// For shuffle
+function restart() {
+  location.reload();
+}
+
+  </script>
+</body>
+</html>
